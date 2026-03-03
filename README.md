@@ -1,6 +1,6 @@
 # hydro_agent plugin for MADS
 
-This is a Source plugin for [MADS](https://github.com/MADS-NET/MADS). 
+This is a Filter plugin for [MADS](https://github.com/MADS-NET/MADS). 
 
 <provide here some introductory info>
 
