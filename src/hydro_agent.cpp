@@ -47,6 +47,8 @@ public:
   // return_type::critical: execution stops
   return_type load_data(json const &input, string topic = "") override {
     // Do something with the input data
+
+    negotiator.listen(input, topic);
     return return_type::success;
   }
 
