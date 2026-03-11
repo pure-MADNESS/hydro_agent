@@ -65,13 +65,22 @@ FetchContent(forecast
   GIT_SHALLOW    TRUE
 )
 
+FetchContent_Declare(httplib
+  GIT_REPOSITORY https://github.com/yhirose/cpp-httplib.git
+  GIT_TAG        master  # Sempre latest
+  GIT_SHALLOW    TRUE
+)
+
+
 FetchContent(ekf
   GIT_REPOSITORY https://github.com/pure-MADNESS/ekf-lib.git
   GIT_TAG        main
   GIT_SHALLOW    TRUE
 )
 
-FetchContent_MakeAvailable(pugg json negotiator forecast ekf)
+
+
+FetchContent_MakeAvailable(pugg json negotiator httplib forecast ekf)
 
 FetchContent_Populate(plugin 
   GIT_REPOSITORY https://github.com/pbosetti/mads_plugin.git
