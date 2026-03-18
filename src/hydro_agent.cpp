@@ -74,11 +74,11 @@ public:
       tm* local_tm = std::localtime(&now_time_t);
       int current_hour = local_tm->tm_hour;
 
-      _precipitation = input.at("precipitation").at(current_hour).get<double>();
-      next_precipitation = input.at("precipitation").at(++current_hour).get<double>();  
-      cout << _precipitation << endl;  
+      _flow = input.at("estimated_flow_m3s").at(current_hour).get<double>();
+      _next_flow = input.at("estimated_flow_m3s").at(++current_hour).get<double>();  
+      cout << _flow << endl;  
       
-      _next_p_mean = (3.46 * pow(_wind, 3) + 3.46 * pow(next_wind, 3)) / 2; 
+      _next_p_mean = 1000*5*0.8*9.81*(_flow + _next_flow)/2; // P = rho * g * h * Q, con h = 5m e rho = 1000 kg/m^3, 0.8 è un coefficiente di efficienza 
     }
 
     cout << "listen negotiator" << endl;
@@ -177,9 +177,12 @@ private:
   double _covariance = 0.01;
   Negotiator _negotiator;
   HydroEKF _ekf;
-  double _precipitation = 0.0; 
+  double _flow = 0.0; 
+  double _next_flow = 0.0;
   WeatherData _weather;
 
+  void future_power(const json& forecast_json);
+  vector <double> power_vector;
   steady_clock::time_point _last_time = steady_clock::now();
   double _time_accumulator = 0.0;
 
@@ -194,6 +197,25 @@ private:
 };
 
 
+
+void Hydro_agentPlugin::future_power(const json& forecast_json){
+
+    power_vector.clear();
+
+    if(!forecast_json.contains("estimated_flow_m3s")){
+      cout << "No forecast data available" << endl;
+      return;
+    }
+
+    for(int i =0; i<24; ++i){
+
+      if(i>=static_cast<int>(forecast_json.at("estimated_flow_m3s").size())){
+        break;
+      }
+      double flow = forecast_json.at("estimated_flow_m3s").at(i).get<double>();
+      double power = 1000 * 5 * 0.8 * 9.81 * flow; // P = rho * g * h * Q, con h = 5m e rho = 1000 kg/m^3, 0.8 è un coefficiente di efficienza
+      power_vector.push_back(power);
+}
 /*
   ____  _             _             _      _
  |  _ \| |_   _  __ _(_)_ __     __| |_ __(_)_   _____ _ __
