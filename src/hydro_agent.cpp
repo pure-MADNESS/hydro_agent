@@ -224,6 +224,7 @@ void Hydro_agentPlugin::future_power(const json& forecast_json){
 
       power_vector.push_back(power);
 }
+}
 /*
   ____  _             _             _      _
  |  _ \| |_   _  __ _(_)_ __     __| |_ __(_)_   _____ _ __
