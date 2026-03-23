@@ -1,4 +1,4 @@
-/*
+  /*
   _____ _ _ _                    _             _       
  |  ___(_) | |_ ___ _ __   _ __ | |_   _  __ _(_)_ __  
  | |_  | | | __/ _ \ '__| | '_ \| | | | |/ _` | | '_ \ 
@@ -70,6 +70,10 @@ public:
     cout << " start load data " << endl;
     if(topic == "forecast"){
 
+      if (!input.contains("estimated_flow_m3s")) {
+      cout << "Missing estimated_flow_m3s" << endl;
+      return return_type::retry;
+
       auto now_time_t = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
       tm* local_tm = std::localtime(&now_time_t);
       int current_hour = local_tm->tm_hour;
@@ -79,6 +83,8 @@ public:
       cout << _flow << endl;  
       
       _next_p_mean = 1000*5*0.8*9.81*(_flow + _next_flow)/2; // P = rho * g * h * Q, con h = 5m e rho = 1000 kg/m^3, 0.8 è un coefficiente di efficienza 
+
+      future_power(input);
     }
 
     cout << "listen negotiator" << endl;
@@ -110,7 +116,7 @@ public:
 
       _negotiator.set_weather_mean(_next_p_mean);
 
-      _ekf.set_inputs(_precipitation, _negotiator.get_proposed_power());
+      _ekf.set_inputs(_flow, _negotiator.get_proposed_power());
       _ekf.predict(PERIOD);
 
       /*NB:: PASSIAMO A EFK INPUT UNA API DI PRECIPITAZIONI!!
@@ -122,7 +128,7 @@ public:
 
       double tot_erg_w = max(0.8, _negotiator.get_ergodic_penalty() * _negotiator.get_weather_penalty());
 
-      _ekf.update(z, total_erg_w);
+      _ekf.update(z, tot_erg_w);
 
       _input_power = _ekf.get_state()(1);
       _covariance = _ekf.get_covariance()(1, 1);
@@ -207,13 +213,16 @@ void Hydro_agentPlugin::future_power(const json& forecast_json){
       return;
     }
 
-    for(int i =0; i<24; ++i){
+    auto flows = forecast_json.at("estimated_flow_m3s");
+
+    for(size_t i = 0; i < flows.size(); ++i)
+    {
 
       if(i>=static_cast<int>(forecast_json.at("estimated_flow_m3s").size())){
         break;
       }
       double flow = forecast_json.at("estimated_flow_m3s").at(i).get<double>();
-      double power = 1000 * 5 * 0.8 * 9.81 * flow; // P = rho * g * h * Q, con h = 5m e rho = 1000 kg/m^3, 0.8 è un coefficiente di efficienza
+      
       double power;
       if(flow > 2){
         power = 1000 * 5 * 0.8 * 9.81 * flow; // P = rho * g * h * Q, con h = 5m e rho = 1000 kg/m^3, 0.8 è un coefficiente di efficienza
@@ -225,6 +234,7 @@ void Hydro_agentPlugin::future_power(const json& forecast_json){
       power_vector.push_back(power);
 }
 }
+  
 /*
   ____  _             _             _      _
  |  _ \| |_   _  __ _(_)_ __     __| |_ __(_)_   _____ _ __
@@ -234,6 +244,7 @@ void Hydro_agentPlugin::future_power(const json& forecast_json){
                 |___/
 Enable the class as plugin
 */
+
 INSTALL_FILTER_DRIVER(Hydro_agentPlugin, json, json);
 
 
