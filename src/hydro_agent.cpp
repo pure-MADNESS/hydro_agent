@@ -105,6 +105,11 @@ public:
 
     _negotiator.listen(input, topic);
 
+    if(topic == "data"){
+
+      _omega = input.at("omega");
+    }
+
     return return_type::success;
 }
 
