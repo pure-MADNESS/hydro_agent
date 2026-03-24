@@ -66,8 +66,6 @@ public:
   // return_type::critical: execution stops
   return_type load_data(json const &input, string topic = "", vector<unsigned char> const *blob = nullptr) override {
 
-    cout << " start load data " << endl;
-
     if(topic == "forecast"){
 
         // ✅ controllo chiave
@@ -97,7 +95,7 @@ public:
         _flow = flows.at(idx_now).get<double>();
         _next_flow = flows.at(idx_next).get<double>();
 
-        cout << "Flow now: " << _flow << endl;
+        cout << "Flow now: " << _flow << "\t";
         cout << "Flow next: " << _next_flow << endl;
 
         _next_p_mean = 1000 * 5 * 0.8 * 9.81 * (_flow + _next_flow) / 2;
@@ -105,11 +103,7 @@ public:
         future_power(input);
     }
 
-    cout << "listen negotiator" << endl;
-
     _negotiator.listen(input, topic);
-
-    cout << "negotiator listened" << endl;
 
     return return_type::success;
 }
@@ -159,7 +153,7 @@ public:
     if(_negotiator.get_stab_flag()){
 
       _output_power = _negotiator.get_proposed_power();
-      cout << _output_power << endl;
+      // cout << _output_power << endl;
 
       cout << "\rErogating [" << _output_power << "W] while generating [" << _input_power << "W] \033[K" << endl;
     
@@ -236,11 +230,7 @@ void Hydro_agentPlugin::future_power(const json& forecast_json){
 
     _power_vector.clear();
 
-    cout << "smaichol" << endl;
-
     auto flows = forecast_json.at("estimated_flow_m3s");
-
-    cout << "smaichol 2" << endl;
 
     for(size_t i = 0; i < flows.size(); ++i)
     {
