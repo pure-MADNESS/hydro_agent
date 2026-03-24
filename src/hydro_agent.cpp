@@ -52,7 +52,7 @@ public:
     _negotiator(_covariance, _input_power),
     _ekf(50, 10, 4),
     _gen(_rd()), _dis(-0.01, 0.01)
-  {  }
+  {  cout << "constructòr" << endl; }
 
   // Typically, no need to change this
   string kind() override { return PLUGIN_NAME; }
@@ -65,26 +65,44 @@ public:
   // return_type::error: _error is traced, skip process
   // return_type::critical: execution stops
   return_type load_data(json const &input, string topic = "", vector<unsigned char> const *blob = nullptr) override {
-    // Do something with the input data
 
     cout << " start load data " << endl;
+
     if(topic == "forecast"){
 
-      if (!input.contains("estimated_flow_m3s")) {
-      cout << "Missing estimated_flow_m3s" << endl;
-      return return_type::retry;
+        // ✅ controllo chiave
+        if (!input.contains("estimated_flow_m3s")) {
+            cout << "Missing estimated_flow_m3s" << endl;
+            return return_type::retry;
+        }
 
-      auto now_time_t = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-      tm* local_tm = std::localtime(&now_time_t);
-      int current_hour = local_tm->tm_hour;
+        auto flows = input.at("estimated_flow_m3s");
 
-      _flow = input.at("estimated_flow_m3s").at(current_hour).get<double>();
-      _next_flow = input.at("estimated_flow_m3s").at(++current_hour).get<double>();  
-      cout << _flow << endl;  
-      
-      _next_p_mean = 1000*5*0.8*9.81*(_flow + _next_flow)/2; // P = rho * g * h * Q, con h = 5m e rho = 1000 kg/m^3, 0.8 è un coefficiente di efficienza 
+        // ✅ controllo array
+        if (!flows.is_array() || flows.empty()) {
+            cout << "Invalid flow data" << endl;
+            return return_type::retry;
+        }
 
-      future_power(input);
+        // ✅ ORA prendi l'ora
+        auto now_time_t = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+        tm* local_tm = std::localtime(&now_time_t);
+        int current_hour = local_tm->tm_hour;
+
+        int size = flows.size();
+
+        int idx_now = current_hour % size;
+        int idx_next = (current_hour + 1) % size;
+
+        _flow = flows.at(idx_now).get<double>();
+        _next_flow = flows.at(idx_next).get<double>();
+
+        cout << "Flow now: " << _flow << endl;
+        cout << "Flow next: " << _next_flow << endl;
+
+        _next_p_mean = 1000 * 5 * 0.8 * 9.81 * (_flow + _next_flow) / 2;
+
+        future_power(input);
     }
 
     cout << "listen negotiator" << endl;
@@ -92,8 +110,9 @@ public:
     _negotiator.listen(input, topic);
 
     cout << "negotiator listened" << endl;
+
     return return_type::success;
-  }
+}
 
   // We calculate the average of the last N values for each key and store it
   // into the output json object
@@ -116,13 +135,9 @@ public:
 
       _negotiator.set_weather_mean(_next_p_mean);
 
-      _ekf.set_inputs(_flow, _negotiator.get_proposed_power());
+      _ekf.set_inputs(_flow, _output_power);
       _ekf.predict(PERIOD);
 
-      /*NB:: PASSIAMO A EFK INPUT UNA API DI PRECIPITAZIONI!!
-        TODO: IMPLEMENTARE LA LOGICA PER CALCOLARE IL FLUSSO A PARTIRE DAI DATI DI INPUT, E PASSARLA ALL'EKF
-        POSSIBILMENTE DIRETTAMENTE NELLA LIBRERIA DENTRO A FETCHWEATHERDATA() O SIMILE, IN MODO DA AVERE UN CODICE PIU PULITO QUI DENTRO.
-      */
       VectorXd z(1); 
       z(0) = _omega + _dis(_gen);
 
@@ -140,11 +155,21 @@ public:
     _negotiator.set_pmax(_input_power);
         
     _negotiator.update_proposal();
-    if(_negotiator.get_stab_flag()){  
-      _output_power = _negotiator.get_proposed_power();
-    }
 
+    if(_negotiator.get_stab_flag()){
+
+      _output_power = _negotiator.get_proposed_power();
+      cout << _output_power << endl;
+
+      cout << "\rErogating [" << _output_power << "W] while generating [" << _input_power << "W] \033[K" << endl;
+    
+    } else{
+
+      cout << "\rNegotiation in progess  \033[K" << endl;
+    }
     out = _negotiator.speak();
+    out["hourly"] = _power_vector;
+
 
     if (!_agent_id.empty()) out["agent_id"] = _agent_id;
     return return_type::success;
@@ -155,6 +180,9 @@ public:
     // (e.g. agent_id, etc.)
     Filter::set_params(params);
 
+    _noise = _dis(_gen);
+
+    cout << "set params" << endl;
     // provide sensible defaults for the parameters by setting e.g.
     _params["some_field"] = "default_value";
     // more here...
@@ -188,7 +216,7 @@ private:
   WeatherData _weather;
 
   void future_power(const json& forecast_json);
-  vector <double> power_vector;
+  vector <double> _power_vector;
   steady_clock::time_point _last_time = steady_clock::now();
   double _time_accumulator = 0.0;
 
@@ -206,14 +234,13 @@ private:
 
 void Hydro_agentPlugin::future_power(const json& forecast_json){
 
-    power_vector.clear();
+    _power_vector.clear();
 
-    if(!forecast_json.contains("estimated_flow_m3s")){
-      cout << "No forecast data available" << endl;
-      return;
-    }
+    cout << "smaichol" << endl;
 
     auto flows = forecast_json.at("estimated_flow_m3s");
+
+    cout << "smaichol 2" << endl;
 
     for(size_t i = 0; i < flows.size(); ++i)
     {
@@ -224,14 +251,14 @@ void Hydro_agentPlugin::future_power(const json& forecast_json){
       double flow = forecast_json.at("estimated_flow_m3s").at(i).get<double>();
       
       double power;
-      if(flow > 2){
+      if(flow > 1){
         power = 1000 * 5 * 0.8 * 9.81 * flow; // P = rho * g * h * Q, con h = 5m e rho = 1000 kg/m^3, 0.8 è un coefficiente di efficienza
       }
       else{
         power = 0.0;
       }
 
-      power_vector.push_back(power);
+      _power_vector.push_back(power);
 }
 }
   
