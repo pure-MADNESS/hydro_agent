@@ -144,7 +144,7 @@ public:
 
       _ekf.update(z, tot_erg_w);
 
-      _input_power = _ekf.get_state()(1);
+      _input_power = _ekf.get_state()(1) * 1000.0;
       _covariance = _ekf.get_covariance()(1, 1);
 
       _time_accumulator -= PERIOD;   
@@ -158,19 +158,25 @@ public:
     if(_negotiator.get_stab_flag()){
 
       _output_power = _negotiator.get_proposed_power();
-      // cout << _output_power << endl;
-
-      cout << "\rErogating [" << _output_power << "W] while generating [" << _input_power << "W] \033[K" << endl;
     
     } else{
 
       cout << "\rNegotiation in progess  \033[K" << endl;
+      
     }
+
+    if(_omega > -0.1 && _omega < 0.1){
+
+      _omega = 0.1;
+    }
+     
     out = _negotiator.speak();
     out["hourly"] = _power_vector;
 
-    out["fmu_input"]["erogated_power"] = _input_power;
+    out["fmu_input"]["resisting_torque"] = _input_power / _omega;
     out["fmu_input"]["flow_input"] = _flow;
+
+     cout << "\rErogating [" << _output_power << "W] while generating [" << _input_power << "W] at omega:" << _omega << " with RT: " << _input_power / _omega <<"\033[K" << endl;
 
     if (!_agent_id.empty()) out["agent_id"] = _agent_id;
     return return_type::success;
@@ -230,7 +236,7 @@ private:
   std::mt19937 _gen;
   std::uniform_real_distribution<double> _dis;
   double _noise = 0.0;
-  double _omega = 5.0;
+  double _omega = 1000.0;
 
   double _next_p_mean = 0;
   
