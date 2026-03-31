@@ -105,9 +105,9 @@ public:
 
     _negotiator.listen(input, topic);
 
-    if(topic == "data"){
+    if(topic.rfind("omega", 0) == 0){
 
-      _omega = input.at("omega");
+      _omega = input.at("output").at("omega").get<double>();
     }
 
     return return_type::success;
@@ -149,7 +149,7 @@ public:
 
       _time_accumulator -= PERIOD;   
       
-    }
+    
     _negotiator.set_cov(_covariance);
     _negotiator.set_pmax(_input_power);
         
@@ -169,9 +169,16 @@ public:
     out = _negotiator.speak();
     out["hourly"] = _power_vector;
 
+    out["fmu_input"]["erogated_power"] = _input_power;
+    out["fmu_input"]["flow_input"] = _flow;
 
     if (!_agent_id.empty()) out["agent_id"] = _agent_id;
     return return_type::success;
+  }
+
+
+    if (!_agent_id.empty()) out["agent_id"] = _agent_id;
+    return return_type::retry;
   }
   
   void set_params(const json &params) override {
