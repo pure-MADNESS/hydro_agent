@@ -45,6 +45,7 @@ class Hydro_agentPlugin : public Filter<json, json> {
 
 public:
 
+/*
   Hydro_agentPlugin() : 
     _input_power(0.0), 
     _output_power(0.0), 
@@ -53,6 +54,7 @@ public:
     _ekf(50, 10, 4),
     _gen(_rd()), _dis(-0.01, 0.01)
   {  cout << "constructòr" << endl; }
+*/
 
   // Typically, no need to change this
   string kind() override { return PLUGIN_NAME; }
@@ -221,8 +223,8 @@ private:
   double _input_power = 0.0;
   double _output_power = 0.0;
   double _covariance = 0.01;
-  Negotiator _negotiator;
-  HydroEKF _ekf;
+  Negotiator _negotiator = Negotiator(0.01, 0.0);
+  HydroEKF _ekf = HydroEKF(50, 10, 4);
   double _flow = 0.0; 
   double _next_flow = 0.0;
   WeatherData _weather;
@@ -238,8 +240,7 @@ private:
   double _noise = 0.0;
   double _omega = 1000.0;
 
-  double _next_p_mean = 0;
-  
+  double _next_p_mean = 0.0;  
 };
 
 
