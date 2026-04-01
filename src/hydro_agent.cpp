@@ -175,11 +175,11 @@ public:
     out = _negotiator.speak();
     out["hourly"] = _power_vector;
 
-    out["fmu_input"]["resisting_torque"] = _input_power / _omega;
+    out["fmu_input"]["resisting_torque"] = _output_power / _omega;
     out["fmu_input"]["flow_rate"] = _flow;
     out["fmu_input"]["omega_r"] = _omega;
 
-     cout << "\rErogating [" << _output_power << "W] while generating [" << _input_power << "W] at omega:" << _omega << " with RT: " << _input_power / _omega <<"\033[K" << endl;
+     cout << "\rErogating [" << _output_power << "W] while generating [" << _input_power << "W] at omega:" << _omega << " with RT: " << _output_power / _omega <<"\033[K" << endl;
 
     if (!_agent_id.empty()) out["agent_id"] = _agent_id;
     return return_type::success;
