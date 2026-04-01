@@ -176,7 +176,8 @@ public:
     out["hourly"] = _power_vector;
 
     out["fmu_input"]["resisting_torque"] = _input_power / _omega;
-    out["fmu_input"]["flow_input"] = _flow;
+    out["fmu_input"]["flow_rate"] = _flow;
+    out["fmu_input"]["omega_r"] = _omega;
 
      cout << "\rErogating [" << _output_power << "W] while generating [" << _input_power << "W] at omega:" << _omega << " with RT: " << _input_power / _omega <<"\033[K" << endl;
 
