@@ -146,7 +146,7 @@ public:
 
       _ekf.update(z, tot_erg_w);
 
-      _input_power = _ekf.get_state()(1) * 1000.0;
+      _input_power = _ekf.get_state()(1);
       _covariance = _ekf.get_covariance()(1, 1);
 
       _time_accumulator -= PERIOD;   
@@ -225,7 +225,7 @@ private:
   double _output_power = 0.0;
   double _covariance = 0.01;
   Negotiator _negotiator = Negotiator(0.01, 0.0);
-  HydroEKF _ekf = HydroEKF(50, 10, 4);
+  HydroEKF _ekf = HydroEKF(50, 39240, 4);
   double _flow = 0.0; 
   double _next_flow = 0.0;
   WeatherData _weather;
@@ -239,7 +239,7 @@ private:
   std::mt19937 _gen;
   std::uniform_real_distribution<double> _dis;
   double _noise = 0.0;
-  double _omega = 1000.0;
+  double _omega = 200.0;
 
   double _next_p_mean = 0.0;  
 };
