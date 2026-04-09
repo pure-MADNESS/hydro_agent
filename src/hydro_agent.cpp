@@ -261,7 +261,7 @@ void Hydro_agentPlugin::future_power(const json& forecast_json){
       double flow = forecast_json.at("estimated_flow_m3s").at(i).get<double>();
       
       double power;
-      if(flow > 1){
+      if(flow > 0.1){
         power = 1000 * 5 * 0.8 * 9.81 * flow; // P = rho * g * h * Q, con h = 5m e rho = 1000 kg/m^3, 0.8 è un coefficiente di efficienza
       }
       else{
