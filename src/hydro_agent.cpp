@@ -70,7 +70,6 @@ public:
 
     if(topic == "forecast"){
 
-        // ✅ controllo chiave
         if (!input.contains("estimated_flow_m3s")) {
             cout << "Missing estimated_flow_m3s" << endl;
             return return_type::retry;
@@ -78,13 +77,11 @@ public:
 
         auto flows = input.at("estimated_flow_m3s");
 
-        // ✅ controllo array
         if (!flows.is_array() || flows.empty()) {
             cout << "Invalid flow data" << endl;
             return return_type::retry;
         }
 
-        // ✅ ORA prendi l'ora
         auto now_time_t = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
         tm* local_tm = std::localtime(&now_time_t);
         int current_hour = local_tm->tm_hour;
@@ -140,7 +137,7 @@ public:
       _ekf.predict(PERIOD);
 
       VectorXd z(1); 
-      z(0) = _omega + _dis(_gen);
+      z(0) = _omega;
 
       double tot_erg_w = max(0.8, _negotiator.get_ergodic_penalty() * _negotiator.get_weather_penalty());
 
@@ -151,11 +148,10 @@ public:
 
       _time_accumulator -= PERIOD;   
       
-    
-    _negotiator.set_cov(_covariance);
-    _negotiator.set_pmax(_input_power);
-        
-    _negotiator.update_proposal();
+      _negotiator.set_cov(_covariance);
+      _negotiator.set_pmax(_input_power);
+          
+      _negotiator.update_proposal();
 
     if(_negotiator.get_stab_flag()){
 
@@ -179,14 +175,12 @@ public:
     out["fmu_input"]["flow_rate"] = _flow;
     out["fmu_input"]["omega_r"] = _omega;
 
-     cout << "\rErogating [" << _output_power << "W] while generating [" << _input_power << "W] at omega:" << _omega << " with RT: " << _output_power / _omega <<"\033[K" << endl;
+     cout << "\rErogating [" << _output_power << "W] while generating [" << _input_power << "W] at omega:" << _omega << " with RT: " << _output_power / _omega << " \t cov: " << _covariance << "\033[K" << endl;
 
     if (!_agent_id.empty()) out["agent_id"] = _agent_id;
     return return_type::success;
   }
 
-
-    if (!_agent_id.empty()) out["agent_id"] = _agent_id;
     return return_type::retry;
   }
   
@@ -194,8 +188,6 @@ public:
     // Call the parent class method to set the common parameters 
     // (e.g. agent_id, etc.)
     Filter::set_params(params);
-
-    _noise = _dis(_gen);
 
     cout << "set params" << endl;
     // provide sensible defaults for the parameters by setting e.g.
@@ -235,9 +227,6 @@ private:
   steady_clock::time_point _last_time = steady_clock::now();
   double _time_accumulator = 0.0;
 
-  std::random_device _rd;
-  std::mt19937 _gen;
-  std::uniform_real_distribution<double> _dis;
   double _noise = 0.0;
   double _omega = 200.0;
 
