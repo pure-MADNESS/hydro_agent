@@ -225,7 +225,7 @@ private:
   double _output_power = 0.0;
   double _covariance = 0.01;
   Negotiator _negotiator = Negotiator(0.01, 0.0);
-  HydroEKF _ekf = HydroEKF(50, 39240, 4);
+  HydroEKF _ekf = HydroEKF(35, 39240, 4);
   double _flow = 0.0; 
   double _next_flow = 0.0;
   WeatherData _weather;
