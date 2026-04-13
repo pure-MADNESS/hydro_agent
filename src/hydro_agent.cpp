@@ -175,7 +175,12 @@ public:
     out["fmu_input"]["flow_rate"] = _flow;
     out["fmu_input"]["omega_r"] = _omega;
 
-     cout << "\rErogating [" << _output_power << "W] while generating [" << _input_power << "W] at omega:" << _omega << " with RT: " << _output_power / _omega << " \t cov: " << _covariance << "\033[K" << endl;
+    cout << endl << "HYDRO AGENT" << endl;
+    cout << "Erogating: " << _output_power << "W" << endl;
+    cout << "Generating: " << _input_power << "W" << endl;
+    cout << "Covariance: " << _covariance << endl;
+    
+    cout << "\033[3A" << flush;
 
     if (!_agent_id.empty()) out["agent_id"] = _agent_id;
     return return_type::success;
