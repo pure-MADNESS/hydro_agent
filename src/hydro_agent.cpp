@@ -94,8 +94,8 @@ public:
         _flow = flows.at(idx_now).get<double>();
         _next_flow = flows.at(idx_next).get<double>();
 
-        cout << "Flow now: " << _flow << "\t";
-        cout << "Flow next: " << _next_flow << endl;
+        // cout << "Flow now: " << _flow << "\t";
+        // cout << "Flow next: " << _next_flow << endl;
 
         _next_p_mean = 1000 * 2 * 0.8 * 9.81 * (_flow + _next_flow) / 2;
 
@@ -175,12 +175,8 @@ public:
     out["fmu_input"]["flow_rate"] = _flow;
     out["fmu_input"]["omega_r"] = _omega;
 
-    cout << endl << "HYDRO AGENT" << endl;
-    cout << "Erogating: " << _output_power << "W" << endl;
-    cout << "Generating: " << _input_power << "W" << endl;
-    cout << "Covariance: " << _covariance << endl;
-    
-    cout << "\033[3A" << flush;
+    // cout << "\033[4A";
+    cout << "\rErogating [" << _output_power << "W] while generating [" << _input_power << "W] at omega:" << "\t cov: " << _covariance << "\033[K" << endl;
 
     if (!_agent_id.empty()) out["agent_id"] = _agent_id;
     return return_type::success;
