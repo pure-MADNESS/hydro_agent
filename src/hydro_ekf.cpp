@@ -15,7 +15,7 @@ HydroEKF::HydroEKF(double J, double kt, int pairs)
 
     Q.resize(2, 2);
     Q << 0.01, 0, 
-            0, 1.0; 
+            0, 0.01; 
 
     R.resize(1, 1);
     R << 0.01; 
@@ -35,7 +35,7 @@ VectorXd HydroEKF::f(const VectorXd& x, double dt){
     double torque_net = (p_max / w) - (_p_actual / w);
     
     x_new(0) = w + (torque_net / _J) * dt;
-    x_new(1) = _kt *_Q_water;
+    x_new(1) = 0.9 * p_max + 0.1 * (_kt * _Q_water);
 
     return x_new;
 }
@@ -49,7 +49,7 @@ MatrixXd HydroEKF::F(const VectorXd& x, double dt){
     double df1_dp = (1.0 / (_J * w)) * dt;
 
     Fj << df1_dw, df1_dp,
-            0,      1; // assume dPmax/dw = 0
+            0,      0.9; // assume dPmax/dw = 0
     
     return Fj;
 }
