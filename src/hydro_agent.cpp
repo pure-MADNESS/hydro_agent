@@ -97,7 +97,7 @@ public:
         cout << "Flow now: " << _flow << "\t";
         cout << "Flow next: " << _next_flow << endl;
 
-        _next_p_mean = 1000 * 5 * 0.8 * 9.81 * (_flow + _next_flow) / 2;
+        _next_p_mean = 1000 * 2 * 0.8 * 9.81 * (_flow + _next_flow) / 2;
 
         future_power(input);
     }
@@ -217,7 +217,7 @@ private:
   double _output_power = 0.0;
   double _covariance = 0.01;
   Negotiator _negotiator = Negotiator(0.01, 0.0);
-  HydroEKF _ekf = HydroEKF(35, 39240, 4);
+  HydroEKF _ekf = HydroEKF(35, 15696, 4);
   double _flow = 0.0; 
   double _next_flow = 0.0;
   WeatherData _weather;
@@ -228,7 +228,7 @@ private:
   double _time_accumulator = 0.0;
 
   double _noise = 0.0;
-  double _omega = 200.0;
+  double _omega = 50.0;
 
   double _next_p_mean = 0.0;  
 };
@@ -251,7 +251,7 @@ void Hydro_agentPlugin::future_power(const json& forecast_json){
       
       double power;
       if(flow > 0.1){
-        power = 1000 * 5 * 0.8 * 9.81 * flow; // P = rho * g * h * Q, con h = 5m e rho = 1000 kg/m^3, 0.8 è un coefficiente di efficienza
+        power = 1000 * 2 * 0.8 * 9.81 * flow; // P = rho * g * h * Q, con h = 5m e rho = 1000 kg/m^3, 0.8 è un coefficiente di efficienza
       }
       else{
         power = 0.0;
