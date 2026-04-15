@@ -15,7 +15,7 @@ HydroEKF::HydroEKF(double J, double kt, int pairs)
 
     Q.resize(2, 2);
     Q << 0.01, 0, 
-            0, 0.01; 
+            0, 1.0; 
 
     R.resize(1, 1);
     R << 0.01; 
