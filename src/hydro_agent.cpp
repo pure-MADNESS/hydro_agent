@@ -140,7 +140,7 @@ public:
       z(0) = _omega;
 
       double tot_history_w = max(0.8, _negotiator.get_history_penalty() * _negotiator.get_weather_penalty());
-      VectorXd vec_history_w;
+      VectorXd vec_history_w(1);
       vec_history_w << tot_history_w;
 
       _ekf.update(z, vec_history_w);
