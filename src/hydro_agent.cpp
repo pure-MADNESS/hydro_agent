@@ -139,9 +139,11 @@ public:
       VectorXd z(1); 
       z(0) = _omega;
 
-      double tot_erg_w = max(0.8, _negotiator.get_ergodic_penalty() * _negotiator.get_weather_penalty());
+      double tot_history_w = max(0.8, _negotiator.get_history_penalty() * _negotiator.get_weather_penalty());
+      VectorXd vec_history_w;
+      vec_history_w << tot_history_w;
 
-      _ekf.update(z, tot_erg_w);
+      _ekf.update(z, vec_history_w);
 
       _input_power = _ekf.get_state()(1);
       _covariance = _ekf.get_covariance()(1, 1);
